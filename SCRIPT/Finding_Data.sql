@@ -18,14 +18,14 @@ SELECT * FROM VisumDistances a join ULTIMATE_STOPS b on (a.StopId=b.SOURCE_CODE 
 --join ULTIMATE_RBS c on (c.STOP_ID=b.ID and replace(c.ROUTE_NAME,' ','') like replace(a.Name,' ',''))
 where a.Name like N'%Уфа%Чишмы%'
 
-select * from ultimate_rbs where ROUTE_ID=1118
+select * from ultimate_rbs where ROUTE_ID=200068
 
 select c.STOP_NAME,d.STOP_NAME,a.AMOUNT,c.GROUP_NUMBER,d.GROUP_NUMBER from 
 (select IdDataSource,IdRoute,BSTOP,ESTOP,Sum(AMOUNT) AMOUNT from ULTIMATE_DS_TRANSACT group by IdDataSource,IdRoute,BSTOP,ESTOP) a 
 join ULTIMATE_ROUTES b on (b.SOURCE_REGION=a.IdDataSource and b.SOURCE_CODE=a.IdRoute and b.SOURCE=2)
 join ULTIMATE_STOPS c on (c.SOURCE=2 and c.SOURCE_REGION=a.IdDataSource and c.SOURCE_CODE=a.BSTOP)
 join ULTIMATE_STOPS d on (d.SOURCE=2 and d.SOURCE_REGION=a.IdDataSource and d.SOURCE_CODE=a.ESTOP)
-where b.ID in (1489)
+where b.ID in (1616,1537)
 
 select a.AMOUNT,BGN,EGN from 
 (select ROUTE_ID,BGN,EGN,Sum(CAST(AMOUNT as INT)) AMOUNT from ULTIMATE_RISE_TRANSACT group by ROUTE_ID,BGN,EGN) a 

@@ -23,6 +23,12 @@ c.GROUP_NUMBER, d.GROUP_NUMBER
 --REORDER ROUTE AMOUNTS AND AVGDIST
 --=================================
 
+select a.* from somecrap2 a join AVGDIST1 b on a.ROUTE_NAME like b.ROUTE_NAME and a.ROUTE_NUMBER like b.ROUTE_NUMBER
+UNION ALL
+(select * from somecrap2
+EXCEPT
+select a.* from somecrap2 a join AVGDIST1 b on a.ROUTE_NAME like b.ROUTE_NAME and a.ROUTE_NUMBER like b.ROUTE_NUMBER)
+
 select a.* from somecrap1 a join AVGDIST1 b on a.ROUTE_NAME like b.ROUTE_NAME and a.ROUTE_NUMBER like b.ROUTE_NUMBER
 UNION ALL
 (select * from somecrap1
@@ -57,3 +63,39 @@ select * from ULTIMATE_STOPS where ID in (4437,13096,13263,13264)
 
 select * from ULTIMATE_ROUTES where GROUP_NUMBER = 54
 --insert into ULTIMATE_ROUTES VALUES (200054,54,1,NULL,NULL,N'Уфа - Салават через Ишимбай',N'551И',193)
+
+--===================================
+--ADD EXTRA ROUTES TO ULTIMATE_ROUTES
+--===================================
+
+--INSERT INTO ULTIMATE_ROUTES
+SELECT 200054+ROW_NUMBER() OVER(ORDER BY GROUP_NUMBER ASC) ID, GROUP_NUMBER, SOURCE, SOURCE_REGION, SOURCE_CODE, ROUTE_NAME, ROUTE_NUMBER, ITEMS_COUNT from (
+SELECT distinct [Group] GROUP_NUMBER, 1 SOURCE, NULL SOURCE_REGION, NULL SOURCE_CODE, Route_NAME ROUTE_NAME, Route_number ROUTE_NUMBER, 0 ITEMS_COUNT FROM
+(
+Select * from ConnectorReestrGroups a join VisumDistances b on (REPLACE(b.RouteAndName,' ','') like CONCAT('%',REPLACE(a.Route_NAME,' ',''),'%'))
+where Direction like '>'
+EXCEPT
+SELECT a.* from
+(Select * from ConnectorReestrGroups a join VisumDistances b on (REPLACE(b.RouteAndName,' ','') like CONCAT('%',REPLACE(a.Route_NAME,' ',''),'%'))
+where Direction like '>') a join ULTIMATE_ROUTES b on (a.[Group]=b.GROUP_NUMBER and b.SOURCE=1)
+) x
+) x
+
+--================================
+--ADD EXTRA ROUTES TO ULTIMATE_RBS
+--================================
+
+--INSERT INTO ULTIMATE_RBS
+SELECT a.ID ROUTE_ID, x.Route_NAME ROUTE_NAME, [Index] STOP_INDEX, StopName STOP_NAME, b.ID STOP_ID, x.AllDist DISTANCE
+FROM
+(
+Select * from ConnectorReestrGroups a join VisumDistances b on (REPLACE(b.RouteAndName,' ','') like CONCAT('%',REPLACE(a.Route_NAME,' ',''),'%'))
+where Direction like '>'
+EXCEPT
+SELECT a.* from
+(Select * from ConnectorReestrGroups a join VisumDistances b on (REPLACE(b.RouteAndName,' ','') like CONCAT('%',REPLACE(a.Route_NAME,' ',''),'%'))
+where Direction like '>') a join ULTIMATE_ROUTES b on (a.[Group]=b.GROUP_NUMBER and b.SOURCE=1) join ULTIMATE_RBS c on (c.ROUTE_ID=b.ID)
+) x
+join ULTIMATE_ROUTES a on (a.GROUP_NUMBER=x.[Group] and a.SOURCE=1)
+join ULTIMATE_STOPS b on (b.SOURCE_CODE=x.StopId and b.SOURCE=1)
+ORDER BY ROUTE_ID,DISTANCE,STOP_ID
