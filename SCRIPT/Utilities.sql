@@ -1,18 +1,27 @@
-﻿SELECT * FROM ultimate_routes WHERE route_name like N'%Чишмы%Уфа%'
+﻿--==================================
+--RECONSTRUCT ULTIMATE_RISE_TRANSACT
+--==================================
 
-SELECT * FROM ULTIMATE_routes WHERE Group_Number=303
+--select * INTO ULTIMATE_RISE_TRANSACT_BACKUP from ULTIMATE_RISE_TRANSACT
+--drop table ULTIMATE_RISE_TRANSACT
 
-select b.ROUTE_NAME,a.DDATE,c.STOP_NAME,c.GROUP_NUMBER,d.STOP_NAME,a.AMOUNT from ULTIMATE_DS_TRANSACT a
-join ULTIMATE_ROUTES b on (b.SOURCE_REGION=IdDataSource and b.SOURCE_CODE=IdRoute)
-join ULTIMATE_STOPS c on (c.SOURCE_REGION=IdDataSource and c.SOURCE_CODE=BSTOP)
-join ULTIMATE_STOPS d on (d.SOURCE_REGION=IdDataSource and d.SOURCE_CODE=ESTOP)
-where IdDataSource=2 and IdRoute=3701
-and
-(DATEPART(MM,DDATE) = 7 and DATEPART(DD,DDATE) in (17,18,19,20,21))
+SELECt ROW_NUMBER() OVER(ORDER BY b.ID,c.GROUP_NUMBER,d.GROUP_NUMBER,DATEPART(MM,a.StartDate),DATEPART(DD,a.StartDate),DATEPART(HH,a.StartDate)) ID, 
+b.ID ROUTE_ID, DATEPART(HH,a.StartDate) DHOR, DATEPART(DD,a.StartDate) DDAY,
+DATEPART(MM,a.StartDate) DMON, DATEPART(DW,a.StartDate) DDOW, c.GROUP_NUMBER BGN, d.GROUP_NUMBER EGN, SUM(CAST(Amount as INT)) AMOUNT 
+--into ULTIMATE_RISE_TRANSACT 
+from RisePassengerAmount a 
+join ULTIMATE_ROUTES b on (a.RouteName like b.ROUTE_NAME and b.SOURCE=0)
+join ULTIMATE_STOPS c on (c.STOP_NAME like StartStop and c.SOURCE=0)
+join ULTIMATE_STOPS d on (d.STOP_NAME like EndStop and d.SOURCE=0)
+where CONCAT(b.ID,' ',c.ID) in (SELECT CONCAT(ROUTE_ID,' ',STOP_ID) from ULTIMATE_RBS)
+and CONCAT(b.ID,' ',d.ID) in (SELECT CONCAT(ROUTE_ID,' ',STOP_ID) from ULTIMATE_RBS)
+group by b.ID, DATEPART(HH,a.StartDate), DATEPART(DD,a.StartDate),
+DATEPART(MM,a.StartDate), DATEPART(DW,a.StartDate), 
+c.GROUP_NUMBER, d.GROUP_NUMBER
 
-SELECt * from ULTIMATE_STOPS where group_number = 10
-
-select * from VisumRouteList where Name like N'%Уфа%Салават%'
+--=================================
+--REORDER ROUTE AMOUNTS AND AVGDIST
+--=================================
 
 select a.* from somecrap1 a join AVGDIST1 b on a.ROUTE_NAME like b.ROUTE_NAME and a.ROUTE_NUMBER like b.ROUTE_NUMBER
 UNION ALL
@@ -26,39 +35,25 @@ UNION ALL
 EXCEPT
 select a.* from AVGDIST2 a join AVGDIST1 b on a.ROUTE_NAME like b.ROUTE_NAME and a.ROUTE_NUMBER like b.ROUTE_NUMBER)
 
-SELECT ROUTE_NAME,ISNULL([INNER],0) [INNER],ISNULL([INTER],0) [INTER],ISNULL([OUTER],0) [OUTER] FROM (
-select ROUTE_NAME, Class, sum(Amount) Amount from
-(select y.Route_NAME,
-CASE 
-      WHEN (b.CITY_NUMBER like N'Уфа' AND c.CITY_NUMBER like N'Уфа') 
-	  or (b.STOP_NAME like N'Город' and c.STOP_NAME like N'По городу%')
-	  or (c.STOP_NAME like N'Город' and b.STOP_NAME like N'По городу%') THEN N'INNER' 
-      WHEN b.CITY_NUMBER not like N'Уфа' AND c.CITY_NUMBER not like N'Уфа' THEN N'OUTER' 
-      ELSE N'INTER'
-END Class, Amount from ULTIMATE_DS_TRANSACT a
-join ULTIMATE_ROUTES x on (a.IdDataSource=x.SOURCE_REGION and a.IdRoute=x.SOURCE_CODE and x.ROUTE_NAME like N'%Уфа%')
-join (SELECT GROUP_NUMBER,ROUTE_NAME FROM 
-(SELECT ROW_NUMBER() OVER(PARTITION BY GROUP_NUMBER ORDER BY LEN(ROUTE_NAME) ASC) rang,
-GROUP_NUMBER,ROUTE_NAME FROM ULTIMATE_ROUTES where SOURCE=1)x where rang=1) y on (x.GROUP_NUMBER=y.GROUP_NUMBER)
-join ULTIMATE_STOPS b on (a.IdDataSource=b.SOURCE_REGION and a.BSTOP=b.SOURCE_CODE)
-join ULTIMATE_STOPS c on (a.IdDataSource=c.SOURCE_REGION and a.ESTOP=c.SOURCE_CODE)
-union ALL
-select y.Route_NAME,
-CASE 
-      WHEN (b.CITY_NUMBER like N'Уфа' AND c.CITY_NUMBER like N'Уфа') THEN N'INNER' 
-      WHEN b.CITY_NUMBER not like N'Уфа' AND c.CITY_NUMBER not like N'Уфа' THEN N'OUTER' 
-      ELSE 'INTER'
-END Class, Amount from ULTIMATE_RISE_TRANSACT a
-join ULTIMATE_ROUTES x on (a.ROUTE_ID=x.ID and x.ROUTE_NAME like N'%Уфа%')
-join (SELECT GROUP_NUMBER,ROUTE_NAME FROM 
-(SELECT ROW_NUMBER() OVER(PARTITION BY GROUP_NUMBER ORDER BY LEN(ROUTE_NAME) ASC) rang,
-GROUP_NUMBER,ROUTE_NAME FROM ULTIMATE_ROUTES where SOURCE=1)x where rang=1) y on (x.GROUP_NUMBER=y.GROUP_NUMBER)
-join (select distinct group_number, city_number from ULTIMATE_STOPS) b on (a.BGN=b.GROUP_NUMBER)
-join (select distinct group_number, city_number from ULTIMATE_STOPS) c on (a.EGN=c.GROUP_NUMBER)) x
-group by ROUTE_NAME,Class
-) x
-PIVOT
-(
-SUM(AMOUNT)
-for CLASS in ([INNER],[INTER],[OUTER])
-) y
+--=================================
+--UTILITIES TO BOND STOPS BY GROUPS
+--=================================
+
+select * from ultimate_rbs where ROUTE_ID=1203
+select * from ULTIMATE_STOPS where ID in (4437,13096,13263,13264)
+--update  ULTIMATE_STOPS set GROUP_NUMBER = 4437 where GROUP_NUMBER in (4437,13096)
+
+--=================================
+--DROP RBS WHICH HAVE NO CONNECTION
+--=================================
+
+--delete from ULTIMATE_RBS where STOP_ID in (Select STOP_ID from ULTIMATE_ROUTES x join ULTIMATE_RBS a on (x.ID=a.ROUTE_ID and x.SOURCE=1)
+--left join ULTIMATE_STOPS b on (a.STOP_ID=b.ID) where b.ID is NULL) and
+--ROUTE_ID in (Select ID from ULTIMATE_ROUTES where SOURCE=1)
+
+--===============================
+--UTILITIES TO ADD SPECIFIC ROUTE
+--===============================
+
+select * from ULTIMATE_ROUTES where GROUP_NUMBER = 54
+--insert into ULTIMATE_ROUTES VALUES (200054,54,1,NULL,NULL,N'Уфа - Салават через Ишимбай',N'551И',193)
