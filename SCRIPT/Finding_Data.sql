@@ -1,6 +1,6 @@
 ﻿SELECT * FROM ultimate_routes WHERE route_name like N'%Чишмы%Уфа%'
 
-SELECT * FROM ULTIMATE_routes WHERE Group_Number=303
+SELECT * FROM ULTIMATE_routes WHERE Group_Number=21
 
 select b.ROUTE_NAME,a.DDATE,c.STOP_NAME,c.GROUP_NUMBER,d.STOP_NAME,a.AMOUNT from ULTIMATE_DS_TRANSACT a
 join ULTIMATE_ROUTES b on (b.SOURCE_REGION=IdDataSource and b.SOURCE_CODE=IdRoute)
