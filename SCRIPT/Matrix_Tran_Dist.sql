@@ -41,7 +41,8 @@ on (a.ROUTE_ID=b.ID)
 --[[[FILTER BEGIN]]]
 where 
 --(RGN in (109)) and 
---(DMON = 4 and DDAY in (3,4,5,6,7,8,9)) 
+(DMON = 4 and DDAY in (3,4,5,6,7,8,9)) 
+OR
 (DMON = 7 and DDAY in (17,18,19,20,21,22,23))
 --AND
 --(DDOW in (6,2,3,4,5))
