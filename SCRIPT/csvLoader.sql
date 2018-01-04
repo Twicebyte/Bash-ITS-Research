@@ -1,7 +1,7 @@
 ﻿--truncate table ReestrLocations
 
-BULK INSERT Ufa_Intercity
-    FROM N'C:\Users\twice\Documents\GitHub\Bash-ITS-Research\INPUT\Ufa_Intercity_Routes.csv'
+BULK INSERT ufa_intercity
+    FROM N'C:\Users\twice\Documents\GitHub\Bash-ITS-Research\INPUT\Ufa_Intercity_Routes_2.csv'
     WITH
     (
 	FIRSTROW = 2,

@@ -1,9 +1,10 @@
 ﻿--drop table AVGDIST2
-
-SELECT ROUTE_NUMBER, ROUTE_NAME, SUMDIST/AMOUNT AVGDIST --into AVGDIST2 
+select y.ID,RGN,isnull(y.Route_number,x.route_number) ROUTE_NUMBER,isnull(y.Route_name,x.route_name) ROUTE_NAME, x.AVGDIST --INTO AVGDIST2
+from (
+SELECT RGN,y.ROUTE_NUMBER, y.ROUTE_NAME, SUMDIST/AMOUNT AVGDIST --into AVGDIST2 
 FROM (
 SELECT RGN, SUM(AMOUNT) AMOUNT, SUM(AMOUNT*DIST) SUMDIST FROM (
-select RGN,BGN,EGN,AMOUNT,avg(abs(ac.DISTANCE - bc.DISTANCE)) DIST from (
+select RGN,BGN,EGN,AMOUNT, avg(abs(ac.DISTANCE - bc.DISTANCE)) DIST from (
 SELECT RGN,BGN,EGN,M+N+E+G AMOUNT FROM (
 SELECT RGN,BGN,EGN,a.ID BID,b.ID EID,
 ROW_NUMBER() OVER(PARTITION BY RGN,BGN,EGN 
@@ -43,7 +44,8 @@ on (a.ROUTE_ID=b.ID)
 --
 --[[[FILTER BEGIN]]]
 --where 
---(RGN in (109)) and 
+--(RGN in (277)) 
+--and 
 --(DMON = 4 and DDAY in (3,4,5,6,7,8,9)) 
 --(DMON = 7 and DDAY in (17,18,19,20,21,22,23))
 --AND
@@ -66,12 +68,14 @@ join ULTIMATE_STOPS b on (x.EGN=b.GROUP_NUMBER)
 WHERE a.SOURCE=1 and b.SOURCE=1
 ) x WHERE RANG=1
 ) x 
-join ULTIMATE_STOPS a on (x.BGN=a.GROUP_NUMBER)
-join ULTIMATE_STOPS b on (x.EGN=b.GROUP_NUMBER)
-join ULTIMATE_ROUTES c on (c.GROUP_NUMBER=x.RGN)
+join ULTIMATE_STOPS a on (x.BGN=a.GROUP_NUMBER and a.SOURCE=1)
+join ULTIMATE_STOPS b on (x.EGN=b.GROUP_NUMBER and b.SOURCE=1)
+join ULTIMATE_ROUTES c on (c.GROUP_NUMBER=x.RGN and c.SOURCE=1)
 join ULTIMATE_RBS ac on (c.ID=ac.ROUTE_ID and a.ID=ac.STOP_ID)
 join ULTIMATE_RBS bc on (c.ID=bc.ROUTE_ID and b.ID=bc.STOP_ID)
 WHERE ac.DISTANCE is not null and bc.DISTANCE is not null and BGN!=EGN
 group by RGN,BGN,EGN,AMOUNT
 ) x GROUP BY RGN
 ) x join ULTIMATE_ROUTES y on (y.Group_Number=RGN and source=1)
+) x full join ordnung y on (x.ROUTE_NAME like y.ROUTE_NAME)
+order by y.id
