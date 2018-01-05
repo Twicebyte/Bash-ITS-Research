@@ -39,14 +39,19 @@ CASE
       WHEN DHOR >= 20 OR DHOR<6 THEN 'G' 
 END DAYPART,DDAY,DMON,DDOW, b.GROUP_NUMBER RGN,BGN,EGN,AMOUNT from ULTIMATE_RISE_TRANSACT a join ULTIMATE_ROUTES b 
 on (a.ROUTE_ID=b.ID)
+join ULTIMATE_STOPS c on (a.BGN=c.GROUP_NUMBER and b.SOURCE=0)
+join ULTIMATE_RBS bc on (b.ID=bc.ROUTE_ID and c.ID=bc.STOP_ID)
+join ULTIMATE_STOPS d on (a.EGN=d.GROUP_NUMBER and b.SOURCE=0)
+join ULTIMATE_RBS bd on (b.ID=bd.ROUTE_ID and d.ID=bd.STOP_ID)
 ) x
 
 --
 --[[[FILTER BEGIN]]]
 --where 
---(RGN in (277)) 
+--(RGN in (101)) 
 --and 
 --(DMON = 4 and DDAY in (3,4,5,6,7,8,9)) 
+--or
 --(DMON = 7 and DDAY in (17,18,19,20,21,22,23))
 --AND
 --(DDOW in (6,2,3,4,5))
