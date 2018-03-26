@@ -1,4 +1,4 @@
-﻿E--select sum(ACTIVEDAYS*(M+N+E+G)) from julyAim
+﻿--select sum(ACTIVEDAYS*(M+N+E+G)) from julyAim
 
 
 

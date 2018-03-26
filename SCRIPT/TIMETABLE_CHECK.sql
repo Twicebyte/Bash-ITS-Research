@@ -1,0 +1,13 @@
+--SELECT a.RNAME,a.DIR,a.DEP,a.IND,ARRIVAL,ALLDIST,a.SPEED,ALLDIST/(DATEPART(HH,(CAST(b.DEP as datetime)-CAST(a.DEP as datetime)-(IND-2)/1440.0))+DATEPART(MI,(CAST(b.DEP as datetime)-CAST(a.DEP as datetime)-(IND-2)/1440.0))/60.0+DATEPART(SS,(CAST(b.DEP as datetime)-CAST(a.DEP as datetime)-(IND-2)/1440.0))/3600.0) ELIMITED, b.* FROM (
+--SELECT RNAME,DIR,DEP,IND,ARRIVAL,ALLDIST,SPEED FROM (
+--select ROW_NUMBER() OVER(PARTITION BY a.RNAME,a.DIR,a.DEP ORDER BY IND DESC) RANG,ab.IND, a.RNAME, a.DEP,
+--a.DIR,CAST(CAST(a.DEP as DATETIME)+ab.ALLDIST/a.SPEED/24.0+(ab.IND-2)/1440.0 as TIME) ARRIVAL,SPEED, ALLDIST from PRE_RASP a 
+--join GOTHROUGH ab on (a.RNAME like ab.ROUTE_N_NAME and ab.DIR like a.DIR and a.PERIOD=0)
+--) x WHERE RANG=1 ) a
+--join PRE_RASP b on (a.RNAME like b.RNAME and a.DIR not like b.DIR and CAST(a.ARRIVAL as datetime)>CAST(b.DEP as datetime) and CAST(a.ARRIVAL as datetime)<DATEADD(MI,5,CAST(b.DEP as datetime)))
+--order by a.RNAME, a.DIR, a.DEP
+
+SELECT A.RNAME,MAX(b.ALLDIST),a.SPEED,A.DIR,CONCAT(FLOOR(MAX(b.ALLDIST/a.speed)),'hr ',FLOOR(cAST(MAX(b.ALLDIST/a.speed)*60 as INT)%60),'min'),
+CONCAT(FLOOR(MAX(b.ALLDIST/a.SPEED+(b.IND-2)/60.0)),'hr ',FLOOR(cast(MAX(b.ALLDIST/a.SPEED+(b.IND-2)/60.0)*60 as Int)%60),'min') FROM 
+PRE_RASP a join GOTHROUGH b on (a.DIR like b.DIR and a.RNAME like b.ROUTE_N_NAME) 
+GROUP BY A.RNAME,a.SPEED,a.DIR ORDER BY RNAME,DIR

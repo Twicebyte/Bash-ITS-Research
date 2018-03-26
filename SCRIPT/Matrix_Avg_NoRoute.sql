@@ -66,19 +66,19 @@ join ULTIMATE_STOPS d on (d.ID=a.EGN)
 
 --
 --[[[FILTER BEGIN]]]
-where 
+--where 
 --(RGN in (79)) and 
-(DMON = 4 and DDAY in (3,4,5,6,7,8,9)) 
+--(DMON = 4 and DDAY in (3,4,5,6,7,8,9)) 
 --(DMON = 7 and DDAY in (17,18,19,20,21,22,23))
-AND
-(DDOW in (6,2,3,4,5))
+--AND
+--(DDOW in (6,2,3,4,5))
 --(DDOW in (1,7))
 --[[[FILTER END]]]
 
 GROUP BY DAYPART,DDAY,DMON,DDOW,BGN,EGN
-) x
+) x 
 GROUP BY DAYPART,BGN,EGN
-) x
+) x 
 PIVOT
 ( AVG(AVGAMOUNT) FOR DAYPART IN (M,N,E,G)) y
 --[[[---------------]]]
